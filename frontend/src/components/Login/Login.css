@@ -1,0 +1,223 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* Color palette variables */
+:root {
+  --black: #000;
+  --deep-purple: #12001a;
+  --purple-dark: #240046;
+  --purple-mid: #3c096c;
+  --purple: #6c2ebf;
+  --purple-light: #b266ff;
+  --white: #fff;
+  --glass-bg: rgba(36, 0, 70, 0.8);
+  --glass-bg-light: rgba(18,0,26,0.5);
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.login-page {
+  height: 100vh;
+  width: 100vw;
+  background: linear-gradient(120deg, var(--deep-purple) 0%, var(--purple-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.login-container {
+  display: flex;
+  width: 80vw;
+  max-width: 950px;
+  min-height: 65vh;
+  background: var(--glass-bg-light);
+  border-radius: 28px;
+  box-shadow: 0 0 48px var(--purple)77, 0 0 0 4px var(--purple-light)33;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+.login-left {
+  flex: 1.2;
+  background: linear-gradient(135deg, var(--deep-purple) 60%, var(--purple-mid) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  color: var(--white);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  box-shadow: 2px 0 24px var(--purple)44 inset;
+}
+
+.login-title {
+  font-family: 'Press Start 2P', 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 2.2rem;
+  color: var(--white);
+  text-shadow: 0 0 16px var(--purple-light), 0 2px 24px var(--purple);
+  margin-bottom: 2rem;
+  letter-spacing: 2px;
+  background: linear-gradient(90deg, var(--purple-light), var(--white), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-description {
+  font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  font-size: 1.2rem;
+  color: var(--purple-light);
+  text-shadow: 0 0 8px var(--black);
+  margin-bottom: 2rem;
+  letter-spacing: 1px;
+}
+
+.arcade-pixel {
+  margin: 2rem auto 0 auto;
+  width: 60px;
+  height: 60px;
+  display: block;
+  filter: drop-shadow(0 0 8px var(--purple-light));
+}
+
+.login-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--glass-bg);
+  padding: 3rem 2rem;
+  position: relative;
+  z-index: 2;
+  box-shadow: -2px 0 24px var(--purple)44 inset;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 370px;
+  background: var(--glass-bg);
+  border: 2px solid var(--purple-light);
+  border-radius: 18px;
+  box-shadow: 0 0 32px var(--purple-light)55, 0 0 8px var(--black) inset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  padding: 2.5rem 2rem 2rem 2rem;
+  backdrop-filter: blur(2px);
+}
+
+.login-form-title {
+  color: var(--white);
+  font-size: 1.5rem;
+  font-family: 'Press Start 2P', 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  margin-bottom: 2rem;
+  text-shadow: 0 0 8px var(--purple-light), 0 2px 16px var(--purple);
+  letter-spacing: 2px;
+  text-align: center;
+  background: linear-gradient(90deg, var(--purple-light), var(--white), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.2rem;
+  border: 2px solid var(--purple);
+  border-radius: 10px;
+  background: var(--deep-purple);
+  color: var(--white);
+  font-size: 1rem;
+  font-family: 'Press Start 2P', 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  outline: none;
+  box-shadow: 0 2px 8px var(--purple)22;
+  transition: background 0.2s, border 0.2s;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.login-form input:focus {
+  background: var(--purple-dark);
+  border: 2px solid var(--purple-light);
+}
+
+.login-form button {
+  width: 100%;
+  background: linear-gradient(90deg, var(--purple-light) 0%, var(--purple) 100%);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 0;
+  font-size: 1.1rem;
+  font-family: 'Press Start 2P', 'Orbitron', 'Segoe UI', Arial, sans-serif;
+  cursor: pointer;
+  box-shadow: 0 2px 16px var(--purple-light)99, 0 0 8px var(--purple)55 inset;
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  letter-spacing: 2px;
+  margin-top: 0.5rem;
+  text-shadow: 0 1px 4px var(--black);
+}
+
+.login-form button:hover {
+  background: linear-gradient(90deg, var(--purple) 0%, var(--purple-light) 100%);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 24px var(--purple-light)cc;
+}
+
+.login-footer {
+  margin-top: 2rem;
+  color: var(--purple-light);
+  font-size: 0.8rem;
+  text-align: center;
+  opacity: 0.8;
+  letter-spacing: 1px;
+  text-shadow: 0 0 8px var(--black);
+}
+
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+    width: 98vw;
+    min-height: 90vh;
+    border-radius: 16px;
+  }
+  .left-section, .right-section {
+    padding: 2rem 1rem;
+  }
+  .left-section .welcome-title {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-container {
+    flex-direction: column;
+    width: 100vw;
+    min-height: 100vh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .left-section, .right-section {
+    padding: 1.2rem 0.5rem;
+  }
+  .left-section .welcome-title {
+    font-size: 1rem;
+  }
+  .login-form-title {
+    font-size: 1rem;
+  }
+  .login-form input, .login-form button {
+    font-size: 0.8rem;
+    padding: 0.6rem 0.5rem;
+  }
+}
