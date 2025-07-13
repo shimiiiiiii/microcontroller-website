@@ -17,7 +17,12 @@ def get_db():
 # Route to create a player
 @router.post("/create-players/", response_model=player.Player)
 def create_player(player: player.PlayerCreate, db: Session = Depends(get_db)):
-    return controller.create_player(db=db, name=player.name, rfid_number=player.rfid_number)
+    return controller.create_player(
+        db=db,
+        name=player.name,
+        rfid_number=player.rfid_number,
+        is_admin=player.is_admin
+    )
 
 @router.get("/players/rfid/{rfid_number}", response_model=player.Player)  
 def get_player_by_rfid(rfid_number: str, db: Session = Depends(get_db)):
@@ -29,8 +34,8 @@ def get_player_by_rfid(rfid_number: str, db: Session = Depends(get_db)):
 
 # Route to get all players
 @router.get("/players/", response_model=list[player.Player])
-def read_players(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return controller.get_players(db=db, skip=skip, limit=limit)
+def read_players(db: Session = Depends(get_db)):
+    return controller.get_players(db=db)
 
 # Route to get a player by ID
 @router.get("/players/{player_id}", response_model=player.Player)

@@ -12,13 +12,16 @@ const Login = () => {
     try {
       const response = await axios.get(`http://localhost:8000/players/rfid/${rfid}`);
       if (response.status === 200) {
-        // Store the complete player data instead of just RFID
         const playerData = response.data;
         localStorage.setItem('playerData', JSON.stringify(playerData));
         localStorage.setItem('rfid', rfid);
-        
-        // Navigate to dashboard/home page
-        navigate('/dashboard');
+
+        // Redirect based on admin status
+        if (playerData.is_admin) {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setNotification({
           type: 'error',
