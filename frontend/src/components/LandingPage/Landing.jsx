@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // Prizes and Players array data
 const prizes = [
@@ -57,6 +58,7 @@ const LandingPage = () => {
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
   const [isVisible, setIsVisible] = useState({});
   const [userPoints, setUserPoints] = useState(0); 
+  const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   const scrollToSection = (sectionId) => {
@@ -101,6 +103,47 @@ const LandingPage = () => {
   }, []);
 
   const visiblePrizes = prizes.slice(currentPrizeIndex, currentPrizeIndex + 3);
+
+  // Fetch user info on mount (if logged in)
+  useEffect(() => {
+    const rfid = localStorage.getItem("rfid");
+    if (rfid) {
+      axios
+        .get(`http://localhost:8000/players/rfid/${rfid}`)
+        .then((response) => {
+          setUser(response.data);
+          setUserPoints(response.data.points);
+        })
+        .catch(() => {
+          navigate("/login");
+        });
+    }
+  }, [navigate]);
+
+  // Claim prize logic
+  const claimPrize = async (prize) => {
+    if (!user) {
+      alert("Please log in first.");
+      return;
+    }
+    if (userPoints >= prize.points) {
+      try {
+        // Deduct points from user in backend
+        const res = await axios.post("http://localhost:8000/players/deduct_points/", null, {
+          params: {
+            rfid_number: user.rfid_number,
+            points: prize.points
+          }
+        });
+        setUserPoints(res.data.new_points);
+        alert(`You have claimed the prize: ${prize.name}`);
+      } catch (err) {
+        alert("Error updating points.");
+      }
+    } else {
+      alert("You do not have enough points to claim this prize.");
+    }
+  };
 
   return (
     <div style={styles.landingPage}>
@@ -185,7 +228,7 @@ const LandingPage = () => {
                   <div style={styles.prizePoints}>
                     <span>Points required:</span> <strong>{prize.points}</strong>
                   </div>
-                  <button style={styles.claimBtn}>Claim</button>
+                  <button style={styles.claimBtn} onClick={() => claimPrize(prize)}>Claim</button>
                 </div>
               ))}
             </div>
@@ -854,7 +897,7 @@ const LandingPage = () => {
 //                   <div style={styles.prizePoints}>
 //                     <span>Points required:</span> <strong>{prize.points}</strong>
 //                   </div>
-//                   <button style={styles.claimBtn}>Claim</button>
+//                   <button style={styles.claimBtn} onClick={() => claimPrize(prize)}>Claim</button>
 //                 </div>
 //               ))}
 //             </div>

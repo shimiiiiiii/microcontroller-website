@@ -144,6 +144,52 @@ const styles = {
   },
 };
 
+const getActiveUsersByCredits = (players, count = 5) =>
+  [...players]
+    .filter(p => p.credits > 0)
+    .sort((a, b) => b.credits - a.credits)
+    .slice(0, count)
+    .map(p => ({ name: p.name, credits: p.credits }));
+
+const getTopPlayersByPoints = (players, count = 5) =>
+  [...players]
+    .sort((a, b) => b.points - a.points)
+    .slice(0, count)
+    .map(p => ({ name: p.name, points: p.points }));
+
+const getTopPlayersByCredits = (players, count = 5) =>
+  [...players]
+    .sort((a, b) => b.credits - a.credits)
+    .slice(0, count)
+    .map(p => ({ name: p.name, credits: p.credits }));
+
+const getPlayersWithMoreGamesToPlay = (players, count = 5) =>
+  [...players]
+    .sort((a, b) => b.points - a.points)
+    .slice(0, count)
+    .map(p => ({ name: p.name, points: p.points }));
+
+// Add this function above your component
+const getWeeklyCreditsClaimed = (players) => {
+  // Simulate weekly grouping for demo (replace with real grouping if you have week info)
+  const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+  return weeks.map((week, i) => ({
+    week,
+    credits: players
+      .filter((_, idx) => idx % 4 === i) // distribute players into weeks
+      .reduce((sum, p) => sum + (p.credits || 0), 0)
+  }));
+};
+
+const getCombinedRanking = (players, count = 5) =>
+  [...players]
+    .map(p => ({
+      name: p.name,
+      total: (p.points || 0) + (p.credits || 0)
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, count);
+
 const AdminDashboard = () => {
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -317,27 +363,45 @@ const AdminDashboard = () => {
       {/* Analytics Section */}
       <div style={styles.section}>
         <div style={styles.sectionTitle}>Analytics</div>
+        
+        {/* Row 1 */}
         <div style={styles.chartsRow}>
-          {/* Bar Chart - Top 5 Players */}
+          {/* 1. Top 5 Active Users (Most Credits) */}
           <div style={styles.chartCard}>
-            <h2 style={{color: '#a259ff', fontSize: '1.3rem', marginBottom: '1rem'}}>Top 5 Players by Points</h2>
+            <h2 style={{color: '#a259ff'}}>Top 5 Active Users</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={mostPlayedData}>
+              <BarChart data={getActiveUsersByCredits(players)}>
                 <XAxis dataKey="name" stroke="#fff" />
                 <YAxis stroke="#fff" />
                 <Tooltip />
-                <Bar dataKey="value" fill="#a259ff" />
+                <Bar dataKey="credits" fill="#00C49F" />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          {/* Pie Chart - Points Distribution */}
+          {/* 2. Top 5 Users with Highest Points */}
           <div style={styles.chartCard}>
-            <h2 style={{color: '#a259ff', fontSize: '1.3rem', marginBottom: '1rem'}}>Points Distribution</h2>
+            <h2 style={{color: '#a259ff'}}>Top 5 Users with Highest Points</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={getTopPlayersByPoints(players)}>
+                <XAxis dataKey="name" stroke="#fff" />
+                <YAxis stroke="#fff" />
+                <Tooltip />
+                <Area type="monotone" dataKey="points" stroke="#a259ff" fill="#a259ff" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        
+        {/* Row 2 */}
+        <div style={styles.chartsRow}>
+          {/* 3. Top 5 Players with Highest Credits Balance */}
+          <div style={styles.chartCard}>
+            <h2 style={{color: '#a259ff'}}>Top 5 Players with Highest Credits Balance</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={pointsRankingData}
-                  dataKey="value"
+                  data={getTopPlayersByCredits(players)}
+                  dataKey="credits"
                   nameKey="name"
                   cx="50%"
                   cy="50%"
@@ -345,7 +409,7 @@ const AdminDashboard = () => {
                   fill="#82ca9d"
                   label
                 >
-                  {pointsRankingData.map((entry, index) => (
+                  {getTopPlayersByCredits(players).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -354,59 +418,43 @@ const AdminDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </div>
-        
-        {/* Second Row of Charts */}
-        <div style={styles.chartsRow}>
-          {/* Daily Active Users */}
+          {/* 4. Players with More Games to Play */}
           <div style={styles.chartCard}>
-            <h2 style={{color: '#a259ff', fontSize: '1.3rem', marginBottom: '1rem'}}>Daily Active Users</h2>
+            <h2 style={{color: '#a259ff'}}>Players with More Games to Play</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dauData}>
-                <XAxis dataKey="day" stroke="#fff" />
+              <LineChart data={getPlayersWithMoreGamesToPlay(players)}>
+                <XAxis dataKey="name" stroke="#fff" />
                 <YAxis stroke="#fff" />
                 <Tooltip />
-                <Line type="monotone" dataKey="users" stroke="#00C49F" strokeWidth={3} dot={{ fill: '#00C49F', r: 5 }} />
+                <Line type="monotone" dataKey="points" stroke="#ff8042" />
               </LineChart>
             </ResponsiveContainer>
           </div>
-          {/* Total Balls Drop */}
-          <div style={styles.chartCard}>
-            <h2 style={{color: '#a259ff', fontSize: '1.3rem', marginBottom: '1rem'}}>Total Balls Drop</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={sessionData}>
-                <XAxis dataKey="month" stroke="#fff" />
-                <YAxis stroke="#fff" />
-                <Tooltip />
-                <Area type="monotone" dataKey="total" stroke="#ffc658" fill="#ffc658" fillOpacity={0.6} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
         </div>
-
-        {/* Third Row of Charts */}
+        
+        {/* Row 3 */}
         <div style={styles.chartsRow}>
-          {/* Games Played */}
+          {/* 5. Weekly Credits Claimed */}
           <div style={styles.chartCard}>
-            <h2 style={{color: '#a259ff', fontSize: '1.3rem', marginBottom: '1rem'}}>Games Played Weekly</h2>
+            <h2 style={{color: '#a259ff'}}>Weekly Credits Claimed</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={gamesData}>
-                <XAxis dataKey="week" stroke="#fff" />
-                <YAxis stroke="#fff" />
+              <BarChart layout="vertical" data={getWeeklyCreditsClaimed(players)}>
+                <XAxis type="number" stroke="#fff" />
+                <YAxis dataKey="week" type="category" stroke="#fff" />
                 <Tooltip />
-                <Bar dataKey="games" fill="#ff8042" />
+                <Bar dataKey="credits" fill="#ffc658" />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          {/* Peak Play Times */}
+          {/* 6. Top 5 Players (Points + Credits) */}
           <div style={styles.chartCard}>
-            <h2 style={{color: '#a259ff', fontSize: '1.3rem', marginBottom: '1rem'}}>Peak Play Times</h2>
+            <h2 style={{color: '#a259ff'}}>Top 5 Players (Points + Credits)</h2>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={peakTimesData}>
-                <XAxis dataKey="hour" stroke="#fff" />
+              <AreaChart data={getCombinedRanking(players)}>
+                <XAxis dataKey="name" stroke="#fff" />
                 <YAxis stroke="#fff" />
                 <Tooltip />
-                <Area type="monotone" dataKey="activity" stroke="#ffbb28" fill="#ffbb28" fillOpacity={0.7} />
+                <Area type="monotone" dataKey="total" stroke="#ffbb28" fill="#ffbb28" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

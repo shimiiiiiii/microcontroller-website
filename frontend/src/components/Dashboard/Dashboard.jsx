@@ -11,12 +11,25 @@ const prizes = [
   { name: "Wireless Mouse", description: "High-precision wireless gaming mouse.", points: 600 },
 ];
 
+const claimablePoints = [
+  { key: 'daily', label: 'Daily Login', points: 100, desc: 'Claim once per day for logging in.' },
+  { key: 'weekly', label: 'Weekly Bonus', points: 500, desc: 'Claim once per week for being active.' },
+  { key: 'event', label: 'Event Reward', points: 300, desc: 'Special event reward. Claim once!' },
+];
+
 const Dashboard = () => {
   const [player, setPlayer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState({});
   const [notif, setNotif] = useState({ show: false, message: '', type: 'success' });
   const [currentPrizeIndex, setCurrentPrizeIndex] = useState(0);
+  const [claimed, setClaimed] = useState(() => {
+    // Try to load from localStorage/sessionStorage if you want persistence
+    const saved = localStorage.getItem('claimedPoints');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [claimedPrizes, setClaimedPrizes] = useState([]);
+  const [claimedKeys, setClaimedKeys] = useState([]);
   const navigate = useNavigate();
 
   const visiblePrizes = prizes.slice(currentPrizeIndex, currentPrizeIndex + 3);
@@ -47,6 +60,23 @@ const Dashboard = () => {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (player) {
+      // Fetch claimed prizes for the user
+      axios.get(`http://localhost:8000/players/claimed_prizes/`, {
+        params: { rfid_number: player.rfid_number }
+      }).then(res => setClaimedPrizes(res.data));
+    }
+  }, [player]);
+
+  useEffect(() => {
+    if (player) {
+      axios.get("http://localhost:8000/players/claimed_points/", {
+        params: { rfid_number: player.rfid_number }
+      }).then(res => setClaimedKeys(res.data));
+    }
+  }, [player]);
+
   const fetchPlayerData = async (rfid) => {
     try {
       const response = await axios.get(`http://localhost:8000/players/rfid/${rfid}`);
@@ -62,25 +92,73 @@ const Dashboard = () => {
     }
   };
 
+  const isPrizeClaimed = (prize) => claimedPrizes.includes(prize.name);
+
   const claimPrize = async (prize) => {
+    if (isPrizeClaimed(prize)) {
+      showNotification("You already claimed this prize.", 'error');
+      return;
+    }
     if (player.points >= prize.points) {
-      const updatedPoints = player.points - prize.points;
-
-      // Update points locally
-      const updatedPlayer = { ...player, points: updatedPoints };
-      setPlayer(updatedPlayer);
-      localStorage.setItem('playerData', JSON.stringify(updatedPlayer));
-
-      // Optionally, update points in the backend
       try {
-        await axios.put(`http://localhost:8000/players/${player.id}`, { points: updatedPoints });
+        const res = await axios.post("http://localhost:8000/players/claim_prizes/", null, {
+          params: {
+            rfid_number: player.rfid_number,
+            prize_name: prize.name,
+            points: prize.points
+          }
+        });
+        setPlayer(prev => ({ ...prev, points: res.data.new_points }));
+        localStorage.setItem('playerData', JSON.stringify({ ...player, points: res.data.new_points }));
         showNotification(`You have successfully claimed the prize: ${prize.name}`, 'success');
+        // Optionally update claimedPrizes state here
+        setClaimedPrizes(prev => [...prev, prize.name]);
       } catch (error) {
-        console.error('Error updating points:', error);
-        showNotification("Failed to update points. Please try again.", 'error');
+        showNotification(error.response?.data?.detail || "Failed to claim prize.", 'error');
       }
     } else {
       showNotification("You do not have enough points to claim this prize.", 'error');
+    }
+  };
+
+  const claimPrizePoints = async (pointsToClaim = 100) => {
+    try {
+      const res = await axios.post("http://localhost:8000/players/claim_points/", null, {
+        params: {
+          rfid_number: player.rfid_number,
+          points: pointsToClaim
+        }
+      });
+      setPlayer(prev => ({ ...prev, points: res.data.new_points }));
+      localStorage.setItem('playerData', JSON.stringify({ ...player, points: res.data.new_points }));
+      showNotification(`You claimed ${pointsToClaim} points!`, 'success');
+    } catch (err) {
+      showNotification("Failed to claim points.", 'error');
+    }
+  };
+
+  const isPointsPrizeClaimed = (item) => claimedKeys.includes(item.key);
+
+  const claimPointsPrize = async (item) => {
+    if (isPointsPrizeClaimed(item)) return;
+    try {
+      const res = await axios.post("http://localhost:8000/players/claim_points/", null, {
+        params: {
+          rfid_number: player.rfid_number,
+          key: item.key,
+          points: item.points
+        }
+      });
+      setPlayer(prev => ({ ...prev, points: res.data.new_points }));
+      setClaimedKeys(prev => [...prev, item.key]);
+      showNotification(`You claimed ${item.points} points for ${item.label}!`, 'success');
+    } catch (err) {
+      showNotification(
+        err.response?.data?.detail === "Already claimed"
+          ? "You already claimed this reward."
+          : "Failed to claim points.",
+        'error'
+      );
     }
   };
 
@@ -137,6 +215,7 @@ const Dashboard = () => {
           <span style={styles.pointsIcon}>⭐</span>
           <span>{player.points} PTS</span>
           <button style={styles.logoutButton} onClick={handleLogout}>Logout</button>
+         
         </div>
       </div>
 
@@ -192,8 +271,17 @@ const Dashboard = () => {
                 <div style={styles.prizePoints}>
                   <span>Points required:</span> <strong>{prize.points}</strong>
                 </div>
-                <button style={styles.claimBtn} onClick={() => claimPrize(prize)}>
-                  Claim
+                <button
+                  style={{
+                    ...styles.claimBtn,
+                    background: isPrizeClaimed(prize) ? '#ccc' : styles.claimBtn.background,
+                    cursor: isPrizeClaimed(prize) ? 'not-allowed' : 'pointer',
+                    opacity: isPrizeClaimed(prize) ? 0.7 : 1,
+                  }}
+                  onClick={() => claimPrize(prize)}
+                  disabled={isPrizeClaimed(prize)}
+                >
+                  {isPrizeClaimed(prize) ? "Claimed" : "Claim"}
                 </button>
               </div>
             ))}
@@ -219,6 +307,44 @@ const Dashboard = () => {
             />
           ))}
         </div>
+      </div>
+
+      {/* Claimable Points Section */}
+      <div style={{
+        display: 'flex',
+        gap: '2rem',
+        justifyContent: 'center',
+        margin: '2rem 0'
+      }}>
+        {claimablePoints.map(item => (
+          <div key={item.key} style={{
+            background: 'rgba(255,255,255,0.07)',
+            borderRadius: '20px',
+            padding: '2rem',
+            minWidth: '220px',
+            textAlign: 'center',
+            boxShadow: '0 4px 20px rgba(162, 89, 255, 0.08)',
+            border: '1px solid rgba(162, 89, 255, 0.2)',
+            opacity: claimed[item.key] ? 0.5 : 1
+          }}>
+            <h2 style={{ color: '#a259ff', marginBottom: 8 }}>{item.label}</h2>
+            <div style={{ color: '#c7b6f7', marginBottom: 16 }}>{item.desc}</div>
+            <div style={{ color: '#6c38cc', fontWeight: 700, fontSize: 18, marginBottom: 16 }}>
+              +{item.points} Points
+            </div>
+            <button
+              style={{
+                ...styles.claimBtn,
+                background: claimed[item.key] ? '#ccc' : styles.claimBtn.background,
+                cursor: claimed[item.key] ? 'not-allowed' : 'pointer'
+              }}
+              onClick={() => claimPointsPrize(item)}
+              disabled={claimed[item.key]}
+            >
+              {claimed[item.key] ? 'Claimed' : 'Claim'}
+            </button>
+          </div>
+        ))}
       </div>
 
       {/* Notification */}
